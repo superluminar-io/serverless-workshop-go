@@ -18,7 +18,64 @@ Resources:
                 Variables:
                     NAME_PREFIX: IP adress
 
+    CreateUrlFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: create_url
+            CodeUri: dist/functions/create_url/
+            Handler: handler
+            Runtime: go1.x
+            Events:
+                Post:
+                    Type: Api
+                    Properties:
+                        Path: /short
+                        Method: post
+            Environment:
+                Variables:
+                    TABLE_NAME: !Ref DynamoDBTable
+            Policies:
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref DynamoDBTable
+
+    DynamoDBTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            TableName: short-ids
+            BillingMode: PAY_PER_REQUEST
+            KeySchema:
+                - AttributeName: short_id
+                  KeyType: HASH
+            AttributeDefinitions:
+                - AttributeName: short_id
+                  AttributeType: S
+            StreamSpecification:
+                StreamViewType: NEW_IMAGE
+
+    GetUrlFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: get_url
+            CodeUri: dist/functions/get_url/
+            Handler: handler
+            Runtime: go1.x
+            Events:
+                Get:
+                    Type: Api
+                    Properties:
+                        Path: /short/{short_id}
+                        Method: get
+            Environment:
+                Variables:
+                    TABLE_NAME: !Ref DynamoDBTable
+            Policies:
+                - DynamoDBReadPolicy:
+                      TableName: !Ref DynamoDBTable
+
 Outputs:
     HelloWorldEndpoint:
         Description: "Hello World function HTTPS endpoint"
         Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello"
+    ShortURLEndpoint:
+        Description: "Short URL functions HTTPS endpoint"
+        Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/short"
