@@ -33,6 +33,8 @@ Resources:
                         Path: /short
                         Method: post
                         RestApiId: !Ref ShortenerApi
+                        Auth:
+                            Authorizer: CognitoAuthorizer
             Environment:
                 Variables:
                     TABLE_NAME: !Ref DynamoDBTable
@@ -82,8 +84,12 @@ Resources:
             StageName: Prod
             Cors:
                 AllowMethods: "'POST,OPTIONS'"
-                AllowHeaders: "'content-type'"
+                AllowHeaders: "'content-type, authorization'"
                 AllowOrigin: "'*'"
+            Auth:
+                Authorizers:
+                    CognitoAuthorizer:
+                        UserPoolArn: !GetAtt UserPool.Arn
 
     PreviewFunction:
         Type: AWS::Serverless::Function
@@ -115,6 +121,31 @@ Resources:
                 Name: url
                 Type: String
 
+    UserPool:
+        Type: AWS::Cognito::UserPool
+        Properties:
+            AutoVerifiedAttributes:
+                - email
+            EmailVerificationSubject: 'Your verification code'
+            EmailVerificationMessage: 'Your code is {####}'
+            UserPoolName: ShortenerUsers
+            Policies:
+                PasswordPolicy:
+                    MinimumLength: 8
+            UsernameAttributes:
+                - email
+            Schema:
+                - AttributeDataType: String
+                  Name: email
+                  Required: false
+
+    UserPoolClient:
+        Type: AWS::Cognito::UserPoolClient
+        Properties:
+            UserPoolId: !Ref UserPool
+            ClientName: ShortenerUsersClient
+            GenerateSecret: false
+
 Outputs:
     HelloWorldEndpoint:
         Description: "Hello World function HTTPS endpoint"
@@ -122,3 +153,9 @@ Outputs:
     ShortURLEndpoint:
         Description: "Short URL functions HTTPS endpoint"
         Value: !Sub "https://${ShortenerApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/short"
+    UserPoolId:
+        Description: "Id of the Cognito User Pool to be referenced in Clients"
+        Value: !Ref UserPool
+    UserPoolClientId:
+        Description: "Id of the Cognito User Pool Client"
+        Value: !Ref UserPoolClient
