@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
 	"os"
+
+	"github.com/aws/aws-xray-sdk-go/xray"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -17,11 +20,11 @@ type HandlerConfig struct {
 	DynamoDBClient dynamodbiface.DynamoDBAPI
 }
 
-func (hc *HandlerConfig) handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func (hc *HandlerConfig) handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	s := request.PathParameters["short_id"]
 	log.WithField("short_id", s).Info("Got short URL")
 
-	result, err := hc.DynamoDBClient.GetItem(&dynamodb.GetItemInput{
+	result, err := hc.DynamoDBClient.GetItemWithContext(ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(hc.DynamoDBTable),
 		Key: map[string]*dynamodb.AttributeValue{
 			"short_id": {S: aws.String(s)},
@@ -40,9 +43,12 @@ func (hc *HandlerConfig) handler(request events.APIGatewayProxyRequest) (events.
 
 func main() {
 	sess := session.Must(session.NewSession())
+	dbClient := dynamodb.New(sess)
+	xray.AWS(dbClient.Client)
+
 	hc := &HandlerConfig{
 		DynamoDBTable:  os.Getenv("TABLE_NAME"),
-		DynamoDBClient: dynamodb.New(sess),
+		DynamoDBClient: dbClient,
 	}
 	lambda.Start(hc.handler)
 }
