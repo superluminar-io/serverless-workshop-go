@@ -85,6 +85,36 @@ Resources:
                 AllowHeaders: "'content-type'"
                 AllowOrigin: "'*'"
 
+    PreviewFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: preview
+            CodeUri: dist/functions/preview/
+            Handler: handler
+            Runtime: go1.x
+            Events:
+                DynamoDBEvent:
+                    Type: DynamoDB
+                    Properties:
+                        Stream:
+                          !GetAtt DynamoDBTable.StreamArn
+                        StartingPosition: TRIM_HORIZON
+                        BatchSize: 10
+            Environment:
+                Variables:
+                    TABLE_NAME: !Ref PreviewTable
+            Policies:
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref PreviewTable
+
+    PreviewTable:
+        Type: AWS::Serverless::SimpleTable
+        Properties:
+            TableName: url-shortener-preview
+            PrimaryKey:
+                Name: url
+                Type: String
+
 Outputs:
     HelloWorldEndpoint:
         Description: "Hello World function HTTPS endpoint"
