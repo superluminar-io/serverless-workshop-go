@@ -5,6 +5,7 @@ Resources:
     HelloWorldFunction:
         Type: AWS::Serverless::Function
         Properties:
+            Tracing: Active
             CodeUri: dist/functions/hello_world/
             Handler: handler
             Runtime: go1.x
@@ -28,6 +29,7 @@ Resources:
     CreateUrlFunction:
         Type: AWS::Serverless::Function
         Properties:
+            Tracing: Active
             FunctionName: create_url
             CodeUri: dist/functions/create_url/
             Handler: handler
@@ -65,6 +67,7 @@ Resources:
     GetUrlFunction:
         Type: AWS::Serverless::Function
         Properties:
+            Tracing: Active
             FunctionName: get_url
             CodeUri: dist/functions/get_url/
             Handler: handler
@@ -86,6 +89,7 @@ Resources:
     ShortenerApi:
         Type: AWS::Serverless::Api
         Properties:
+            TracingEnabled: true
             EndpointConfiguration: REGIONAL
             StageName: Prod
             Cors:
@@ -100,6 +104,7 @@ Resources:
     PreviewFunction:
         Type: AWS::Serverless::Function
         Properties:
+            Tracing: Active
             FunctionName: preview
             CodeUri: dist/functions/preview/
             Handler: handler
