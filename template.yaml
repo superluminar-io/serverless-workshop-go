@@ -18,6 +18,12 @@ Resources:
             Environment:
                 Variables:
                     NAME_PREFIX: IP adress
+            AutoPublishAlias: live
+            DeploymentPreference:
+                Type: Canary10Percent5Minutes
+                Alarms:
+                    - !Ref AliasErrorMetricGreaterThanZeroAlarm
+                    - !Ref LatestVersionErrorMetricGreaterThanZeroAlarm
 
     CreateUrlFunction:
         Type: AWS::Serverless::Function
@@ -145,6 +151,44 @@ Resources:
             UserPoolId: !Ref UserPool
             ClientName: ShortenerUsersClient
             GenerateSecret: false
+
+    AliasErrorMetricGreaterThanZeroAlarm:
+        Type: "AWS::CloudWatch::Alarm"
+        Properties:
+            AlarmDescription: Lambda Function Error > 0
+            ComparisonOperator: GreaterThanThreshold
+            Dimensions:
+                - Name: Resource
+                  Value: !Sub "${HelloWorldFunction}:live"
+                - Name: FunctionName
+                  Value: !Ref HelloWorldFunction
+            EvaluationPeriods: 2
+            MetricName: Errors
+            Namespace: AWS/Lambda
+            Period: 60
+            Statistic: Sum
+            Threshold: 0
+            TreatMissingData: ignore
+
+    LatestVersionErrorMetricGreaterThanZeroAlarm:
+        Type: "AWS::CloudWatch::Alarm"
+        Properties:
+            AlarmDescription: Lambda Function Error > 0
+            ComparisonOperator: GreaterThanThreshold
+            Dimensions:
+                - Name: Resource
+                  Value: !Sub "${HelloWorldFunction}:live"
+                - Name: FunctionName
+                  Value: !Ref HelloWorldFunction
+                - Name: ExecutedVersion
+                  Value: !GetAtt HelloWorldFunction.Version.Version
+            EvaluationPeriods: 2
+            MetricName: Errors
+            Namespace: AWS/Lambda
+            Period: 60
+            Statistic: Sum
+            Threshold: 0
+            TreatMissingData: ignore
 
 Outputs:
     HelloWorldEndpoint:
