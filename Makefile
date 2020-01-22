@@ -6,13 +6,16 @@ test:
 		(cd functions/$$dir && go test); \
 	done
 
-build: clean
-	@for dir in `ls functions`; do \
-		(cd functions/$$dir && GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -installsuffix cgo -o ../../dist/functions/$$dir/handler); \
-	done
+.PHONY: build
+build:
+	@ $(MAKE) $(foreach FUNCTION,$(LIST_FUNCTIONS),build-$(FUNCTION))
 
-clean:
-	@ rm -rf ./dist/ && mkdir ./dist/
+.PHONY: build-%
+build-%:
+	@ make ./dist/functions/$*/handler MAINGO=functions/$*/main.go
+
+./dist/functions/%/handler: $(MAINGO)
+	@ GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -installsuffix cgo -o $@ $(PATH_FUNCTIONS)/$*
 
 deploy: build
 	@ sam deploy
