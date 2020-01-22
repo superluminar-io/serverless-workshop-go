@@ -12,9 +12,9 @@ build:
 
 .PHONY: build-%
 build-%:
-	@ make ./dist/functions/$*/handler MAINGO=functions/$*/main.go
+	@ make ./dist/functions/$*/handler SRC_FILES=functions/$*/*.go
 
-./dist/functions/%/handler: $(MAINGO)
+./dist/functions/%/handler: $(SRC_FILES)
 	@ GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -installsuffix cgo -o $@ $(PATH_FUNCTIONS)/$*
 
 deploy: build
