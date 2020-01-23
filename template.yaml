@@ -195,6 +195,23 @@ Resources:
             Threshold: 0
             TreatMissingData: ignore
 
+    SlowStarterFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            AutoPublishAlias: slow
+            Tracing: Active
+            FunctionName: slow_starter
+            CodeUri: dist/functions/slow_starter/
+            Handler: handler
+            Runtime: go1.x
+            Events:
+                Http:
+                    Type: Api
+                    Properties:
+                        Path: /slow-starter
+                        Method: get
+                        RestApiId: !Ref ShortenerApi
+
 Outputs:
     HelloWorldEndpoint:
         Description: "Hello World function HTTPS endpoint"
@@ -202,6 +219,9 @@ Outputs:
     ShortURLEndpoint:
         Description: "Short URL functions HTTPS endpoint"
         Value: !Sub "https://${ShortenerApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/short"
+    SlowStartURLEndpoint:
+        Description: "SlowStart functions HTTPS endpoint"
+        Value: !Sub "https://${ShortenerApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/slow-starter"
     UserPoolId:
         Description: "Id of the Cognito User Pool to be referenced in Clients"
         Value: !Ref UserPool
