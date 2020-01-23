@@ -199,6 +199,8 @@ Resources:
         Type: AWS::Serverless::Function
         Properties:
             AutoPublishAlias: slow
+            ProvisionedConcurrencyConfig:
+                ProvisionedConcurrentExecutions: 1
             Tracing: Active
             FunctionName: slow_starter
             CodeUri: dist/functions/slow_starter/
