@@ -10,14 +10,9 @@ test:
 
 .PHONY: build
 build:
-	@ $(MAKE) $(foreach FUNCTION,$(LIST_FUNCTIONS),build-$(FUNCTION))
-
-.PHONY: build-%
-build-%:
-	@ make ./dist/functions/$*/handler SRC_FILES=functions/$*/*.go
-
-./dist/functions/%/handler: $(SRC_FILES)
-	@ GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -installsuffix cgo -o $@ $(PATH_FUNCTIONS)/$*
+	@for dir in `ls functions`; do \
+		(cd functions/$$dir && GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -installsuffix cgo -o ../../dist/functions/$$dir/handler .); \
+	done
 
 fe-bucket: guard-FE_BUCKET_NAME
 	@ if [ `aws s3 ls | grep -e ' $(FE_BUCKET_NAME)$$' | wc -l` -eq 1 ]; then \
