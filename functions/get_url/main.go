@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"os"
+	"time"
 
 	"github.com/aws/aws-xray-sdk-go/xray"
 
@@ -21,6 +22,7 @@ type HandlerConfig struct {
 }
 
 func (hc *HandlerConfig) handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	time.Sleep(time.Second)
 	s := request.PathParameters["short_id"]
 	log.WithField("short_id", s).Info("Got short URL")
 

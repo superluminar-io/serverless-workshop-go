@@ -85,6 +85,52 @@ Resources:
             Policies:
                 - DynamoDBReadPolicy:
                       TableName: !Ref DynamoDBTable
+            ReservedConcurrentExecutions: 1
+
+    GetUrlFunctionErrorsAlarm:
+        Type: AWS::CloudWatch::Alarm
+        Properties:
+            AlarmActions:
+                - !Ref AlarmTopic # send a message to this SNS topic
+            AlarmDescription: Number of errors of GetUrl function is too high
+            ComparisonOperator: GreaterThanThreshold
+            DatapointsToAlarm: 2 # Two data points must be "GreaterThanThreshold"
+            EvaluationPeriods: 5 # out of five data points
+            Dimensions:
+                - Name: FunctionName
+                  Value: !Ref GetUrlFunction
+            MetricName: Errors
+            Namespace: AWS/Lambda
+            OKActions:
+                - !Ref AlarmTopic # send a message to this SNS topic
+            Period: 60 # check every 60 seconds
+            Statistic: Sum
+            Threshold: 3
+            TreatMissingData: ignore
+
+    GetUrlFunctionThrottledAlarm:
+        Type: AWS::CloudWatch::Alarm
+        Properties:
+            AlarmActions:
+                - !Ref AlarmTopic # send a message to this SNS topic
+            AlarmDescription: GetUrl function is beeing throttled
+            ComparisonOperator: GreaterThanThreshold
+            DatapointsToAlarm: 1 # As soon one throttling happens, the alarm triggers
+            Dimensions:
+                - Name: FunctionName
+                  Value: !Ref GetUrlFunction
+            EvaluationPeriods: 1
+            MetricName: Throttles
+            Namespace: AWS/Lambda
+            OKActions:
+                - !Ref AlarmTopic # send a message to this SNS topic
+            Period: 60 # check every 60 seconds
+            Statistic: Sum
+            Threshold: 1
+            TreatMissingData: ignore
+
+    AlarmTopic:
+        Type: AWS::SNS::Topic
 
     ShortenerApi:
         Type: AWS::Serverless::Api
